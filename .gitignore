@@ -8,10 +8,10 @@ __pycache__/
 
 *.pyc
 data/media
-data/database
+
 *.session-journal
 *.session
-data/eitaa_session.json
+
 .idea/
 .vscode/
 test.ipynb
