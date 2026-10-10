@@ -1,18 +1,42 @@
+# Secrets and local environment files
 .env
+.env.*
+!.env.example
 
+# Python
 .venv/
-
 venv/
-
 __pycache__/
+*.py[cod]
+*.pyd
 
-*.pyc
-data/media
-
-*.session-journal
-*.session
-
+# IDE and notebook-generated files
 .idea/
 .vscode/
+**/.ipynb_checkpoints/
+
+# Telegram local sessions
+*.session
+*.session-journal
+*.session-wal
+*.session-shm
+
+# Local/private project data
+data/database/
+data/processed/
+data/media/
+data/vector_db/
+
+# Downloaded models and caches
+models/
+data/models/
+.cache/
+huggingface/
+*.safetensors
+*.bin
+*.pt
+*.pth
+
+# Logs and temporary files
+*.log
 test.ipynb
-source.txt

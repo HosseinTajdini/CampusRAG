@@ -5,8 +5,8 @@ import re
 from tqdm import tqdm
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-DB_PATH = BASE_DIR / "data" / "database" / "collected.db"
+ROOT = Path(__file__).resolve().parent.parent
+DB_PATH = ROOT / "data" / "database" / "collected.db"
 
 
 def get_database(database_direction:Path):
@@ -245,7 +245,7 @@ def merge_documents(channel_documents:pd.DataFrame,group_documents:pd.DataFrame)
     return documents
 
 def save_documents(documents:pd.DataFrame):
-    output_dir = BASE_DIR / "data" / "processed"
+    output_dir = ROOT / "data" / "processed"
     output_dir.mkdir(parents=True,exist_ok=True)
 
     output_path = output_dir / "documents.jsonl"
