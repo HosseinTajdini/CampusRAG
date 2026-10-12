@@ -8,7 +8,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from telethon import TelegramClient
 
-from database import (
+from .database import (
     open_database,
     get_last_message_id,
     save_message,
