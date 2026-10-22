@@ -33,6 +33,7 @@ async def open_database():
             source_type TEXT NOT NULL,
             source_id TEXT NOT NULL,
             source_name TEXT NOT NULL,
+            source_username TEXT,
 
             message_id INTEGER NOT NULL,
 
@@ -53,6 +54,18 @@ async def open_database():
             )
         )
     """)
+
+    columns = {
+        row[1]
+        for row in await (await db.execute(
+            "PRAGMA table_info(messages)"
+        )).fetchall()
+    }
+
+    if "source_username" not in columns:
+        await db.execute(
+            "ALTER TABLE messages ADD COLUMN source_username TEXT"
+        )
 
     await db.execute("""
         CREATE INDEX IF NOT EXISTS idx_messages_source
@@ -103,6 +116,29 @@ async def get_last_message_id(
     return 0
 
 
+async def update_source_username(
+    db,
+    platform,
+    source_id,
+    source_username,
+):
+    """Backfill the username for already-collected messages."""
+    await db.execute(
+        """
+        UPDATE messages
+        SET source_username = ?
+        WHERE platform = ?
+          AND source_id = ?
+        """,
+        (
+            source_username,
+            platform,
+            source_id,
+        ),
+    )
+    await db.commit()
+
+
 async def save_message(
     db,
     message,
@@ -114,6 +150,7 @@ async def save_message(
             source_type,
             source_id,
             source_name,
+            source_username,
 
             message_id,
 
@@ -128,7 +165,7 @@ async def save_message(
             caption_path
         )
         VALUES (
-            ?, ?, ?, ?,
+            ?, ?, ?, ?, ?,
             ?,
             ?,
             ?, ?,
@@ -148,6 +185,9 @@ async def save_message(
 
             source_name =
                 excluded.source_name,
+
+            source_username =
+                excluded.source_username,
 
             text =
                 excluded.text,
@@ -172,6 +212,7 @@ async def save_message(
             message["source_type"],
             message["source_id"],
             message["source_name"],
+            message.get("source_username"),
 
             message["message_id"],
 

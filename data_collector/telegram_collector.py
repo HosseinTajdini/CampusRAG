@@ -11,6 +11,7 @@ from telethon import TelegramClient
 from .database import (
     open_database,
     get_last_message_id,
+    update_source_username,
     save_message,
 )
 
@@ -123,6 +124,14 @@ async def save_channel_image(message, channel_name):
 async def sync_source(db, dialog, source_type):
     source_id = str(dialog.id)
     source_name = dialog.name
+    source_username = getattr(dialog.entity, "username", None)
+
+    await update_source_username(
+        db,
+        "telegram",
+        source_id,
+        source_username,
+    )
 
     last_id = await get_last_message_id(
     db,
@@ -176,6 +185,7 @@ async def sync_source(db, dialog, source_type):
                 "source_type": source_type,
                 "source_id": source_id,
                 "source_name": source_name,
+                "source_username": source_username,
                 "message_id": message.id,
                 "text": message.text,
                 "message_date": (

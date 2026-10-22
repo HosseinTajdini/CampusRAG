@@ -18,6 +18,10 @@ def get_database(database_direction:Path):
     """,
     db
     )
+
+    if "source_username" not in df.columns:
+        df["source_username"] = None
+
     return df
 
 
@@ -133,6 +137,7 @@ def build_channel_documents(channels:pd.DataFrame):
         [
             "source_id",
             "source_name",
+            "source_username",
             "message_id",
             "message_date",
             "content",
@@ -148,6 +153,19 @@ def build_channel_documents(channels:pd.DataFrame):
         + channel_documents["message_id"].astype(str)
     )
 
+    channel_documents["message_sources"] = channel_documents.apply(
+        lambda row: [{
+            "message_id": int(row.message_id),
+            "message_date": row.message_date,
+            "media_path": (
+                None
+                if pd.isna(row.media_path)
+                else row.media_path
+            ),
+        }],
+        axis=1,
+    )
+
     return channel_documents
 
 def build_thread_document(thread):
@@ -156,8 +174,13 @@ def build_thread_document(thread):
     parts = []
 
     for row in thread.itertuples():
+        message_date = (
+            "unknown date"
+            if pd.isna(row.message_date)
+            else row.message_date
+        )
         parts.append(
-            f"[message {row.message_id}] {row.content}"
+            f"[message {row.message_id} | {message_date}] {row.content}"
         )
 
     return "\n".join(parts)
@@ -166,14 +189,37 @@ def build_group_documents(groups:pd.DataFrame):
     group_documents = (
         groups
         .groupby(
-            ["source_id","source_name","root_message_id"],
-            as_index=False
+            [
+                "source_id",
+                "source_name",
+                "source_username",
+                "root_message_id",
+            ],
+            as_index=False,
+            dropna=False,
         )
         .apply(
             lambda thread: pd.Series({
                 "content": build_thread_document(thread),
 
                 "message_ids": thread["message_id"].tolist(),
+
+                "message_sources": [
+                    {
+                        "message_id": int(row.message_id),
+                        "message_date": (
+                            None
+                            if pd.isna(row.message_date)
+                            else row.message_date
+                        ),
+                        "media_path": (
+                            None
+                            if pd.isna(row.media_path)
+                            else row.media_path
+                        ),
+                    }
+                    for row in thread.itertuples()
+                ],
 
                 "media_paths": (
                     thread["media_path"]
@@ -217,9 +263,11 @@ def merge_documents(channel_documents:pd.DataFrame,group_documents:pd.DataFrame)
             "document_type",
             "source_id",
             "source_name",
+            "source_username",
             "message_date",
             "content",
             "message_ids",
+            "message_sources",
             "media_paths"
         ]
     ]
@@ -230,9 +278,11 @@ def merge_documents(channel_documents:pd.DataFrame,group_documents:pd.DataFrame)
             "document_type",
             "source_id",
             "source_name",
+            "source_username",
             "message_date",
             "content",
             "message_ids",
+            "message_sources",
             "media_paths"
         ]
     ].copy()

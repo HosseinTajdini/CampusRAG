@@ -306,7 +306,8 @@ def main() -> None:
     documents = load_documents()
     print("Number of documents:", len(documents))
 
-    build_vector_database(documents)
+    client, _, _ = build_vector_database(documents)
+    client.close()
     print("Vector database build complete.")
 
 
