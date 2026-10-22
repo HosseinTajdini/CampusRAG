@@ -391,7 +391,7 @@ def create_gradio_app(
 
         with gr.Row():
             with gr.Column(scale=2):
-                chatbot = gr.Chatbot(type="messages", height=620)
+                chatbot = gr.Chatbot( height=620)
                 with gr.Row():
                     query_box = gr.Textbox(
                         label="Question",
